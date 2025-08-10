@@ -1,6 +1,6 @@
 #!/bin/bash
 
-install_location=/home/$(whoami)/.local/OG_Launcher/jak-project
+install_location=/home/$(whoami)/.local/share/OG_Launcher/jak-project
 temp1=0
 distro=unkown
 
@@ -90,18 +90,28 @@ fi
 
 git_run() {
 	cd $install_location
-	distrocheck
+	##distrocheck
 	git clone https://github.com/open-goal/jak-project
 	cd jak-project/
-	if [ $distro = redhat ]
-		then
+	##if [ $distro = redhat ]
+		##then
 			cmake -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -B build
 			cmake --build build -j$(nproc)
-    else
-			cmake -B build && cmake --build build -j 8
-		fi
+    ##else
+			##cmake -B build && cmake --build build -j 8
+		##fi
 }
 
+jak3_noextractor(){
+                        cd $install_location
+						task set-game-jak3
+						task extract
+						cd build/goalc
+                        ./goalc --game jak3 --cmd "(mi)"
+			kdialog --msgbox "Jak3 installed"
+			cd $install_location
+
+}
 update_menu() {
 update_menutemp=1
 update_menu_answer=1
@@ -117,12 +127,21 @@ while [ 1 ]
             jak2_update
             ;;
             3)
-            jak3_update
+           # jak3_update
+           kdialog --msgbox "please manually move an extracted iso, (needs to a folder) of jak3 to /home/$(whoami)/.local/share/OG_Launcher/iso_data\nAfter that has been done, please clock ok. IF its been done beofre, just click ok"
+           jak3_noextractor
             ;;
             4)
            # opengoal_Update
-            kdialog --msgbox "Opengoal updated, now starting jak1"
-            kdialog --msgbox "jak 1 now updated, starting jak2"
+            cd $install_location
+            kdialog --msgbox "this will take some time, click ok to continue"
+            git pull https://github.com/open-goal/jak-project
+            cmake -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -B build
+			cmake --build build -j$(nproc)
+			kdialog --msgbox "time for jak 1 Click ok to continue"
+			jak1_update
+			kdialog --msgbox "time for jak2, Click ok to continue"
+			jak2_update
             ;;
             0)
                 temp1=1
@@ -148,18 +167,22 @@ esac
 }
 
 ############################### Main Program, What the users sees ########################
-
+game=/home/$(whoami)/.local/OG_Launcher/jak-project/crowdin.yml
 ## start up program commands
-if [ ! -f /home/$(whoami)/.local/jak-project/crowdin.yml ] ; then
+if [ ! -f $game ] ; then
     # dependency_check
-    mkdir /home/$(whoami)/.local/OG_Launcher/
-    cd /home/$(whoami)/.local/OG_Launcher
+mkdir /home/$(whoami)/.local/share/OG_Launcher/
+    cd /home/$(whoami)/.local/share/OG_Launcher
     cd $install_location
     #echo "This may take some time, the script will seek to install all dependies"
     #Depency_install
     git_run
-else
-    temp1=1
+
+    else
+    normalrun=1
+fi
+#else
+temp1=1
 temp2=1
 temp_menu=1
 main_loop=1
@@ -185,12 +208,13 @@ do
         3)
             cd $install_location
             ./build/game/gk --game jak3 -boot -fakeiso
+            #task set-game-jak3
         ;;
         4)
             update_menu
         ;;
         5)
-            kdialog --title "About Launcher" --msgbox "This program was written by Richterman using bash and written for Linux based computers. \nFor more informaion, please check my github page <insert github link>. \nSoftware was written under <insert license>"
+            kdialog --title "About Launcher" --msgbox "This program was written by Richterman using bash and written for Linux based computers. \nFor more informaion, please check my github page https://github.com/Richterman/OG_Launcher. \nSoftware was written under <insert license>"
         ;;
         0)
             main_loop=2
@@ -206,6 +230,6 @@ do
 done
 #### end of program
 
-fi
+#fi
 
 
